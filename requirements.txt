@@ -19,7 +19,7 @@ Click==7.0
 cmake==3.13.3
 colorama==0.4.3
 configparser==4.0.2
-cryptography==2.1.4
+cryptography==2.3
 cycler==0.10.0
 Cython==0.29.14
 decorator==4.4.1
