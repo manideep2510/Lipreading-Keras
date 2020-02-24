@@ -1,0 +1,46 @@
+sudo: required
+dist: trusty
+language: python
+matrix:
+  include:
+  - python: 3.6
+    env: KERAS_VERSION=2.2.4
+  - python: 3.6
+    env: TF_KERAS=true
+git:
+  submodules: true
+install:
+- wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+- bash miniconda.sh -b -p $HOME/miniconda
+- export PATH="$HOME/miniconda/bin:$PATH"
+- hash -r
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+- conda info -a
+- conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION pytest pandas
+- source activate test-environment
+- pip install --only-binary=numpy,scipy numpy nose scipy matplotlib h5py theano
+- pip install tensorflow==1.14
+- export LD_LIBRARY_PATH=$HOME/miniconda/envs/test-environment/lib/:$LD_LIBRARY_PATH
+- conda install mkl mkl-service
+- if [ -z $KERAS_VERSION ]; then echo "Using tf.keras"; else echo "Using keras"; pip
+  install keras==$KERAS_VERSION; fi
+- pip install -e .[tests]
+- export DOC_ONLY_CHANGED=False;
+- if [ $(git diff --name-only HEAD~1 | wc -l) == "1" ] && [[ "$(git diff --name-only
+  HEAD~1)" == *"md" ]]; then export DOC_ONLY_CHANGED=True; fi
+script:
+- export MKL_THREADING_LAYER="GNU"
+- mkdir -p ~/.keras/models
+- if [[ "$DOC_ONLY_CHANGED" == "False" ]]; then if [[ "$TEST_MODE" == "PEP8" ]]; then
+  PYTHONPATH=$PWD:$PYTHONPATH py.test --pep8 -m pep8 -n0; else PYTHONPATH=$PWD:$PYTHONPATH
+  py.test tests/; fi; fi
+deploy:
+  provider: pypi
+  user: qubvel
+  password:
+    secure: JOOYlr1yqBGKjPmhot2zkj4DRIbv7ny9om6PR2V+kmIzWX11fffkDsTLdxcNYyxWM5uXxzFGQgmzfNoKu2HkxxD4Ji6HFA/chmkTRItWWn4+cnCJLd6d/p/8OxQJXoihytR1/0g/Sgqy03wY0y3WVHcdvgpsg9i+lAcCReR3x24eQV3k1iRxNKz14JN0YpNjpde01mP7fLyWUAxlKjdHCr3eTsWd57pSULigFhduq8Dv9MigibkRQtCeH8fmKyX0m1Pd0f8W2NCtuDPi2OARBjbLmEjY6sNVArI9IBi8Nx6Q4WU7nEt1BS91j3i5hPOryEvkqD23XSPP0QJ8QPj9dogX9THwwquc9sRnkZZ9xM7GSy8tsUYUW1GmWEklR3f1RFsDEpa+hJu27dgaXYNsIVsOn6KU38chcc2NU/oc9op8NdI4cF1Gs+3NciHLmNS+3W55zcBjPlddDEWChnx8SZnlYdaVGh0A3O5JdpKE9yiuEqIgYxtXW/kubaXFbQDSS7XWt02jLbkS1zDTD1DOv3LyoA6FWob105+JPLSsT64GGAtYe6Tt5EIxndf4dXUCWAjSZ2k0JXKMSbhwcV9Qs2CQCW6uIWrbs0HJOJNlXxMXnjfT1+YJYZdU5WrquajOiESrYciWEoNELYFBGEL2ed/iies2IMxxhPqHu77DG4M=
+  on:
+    tags: true
+  skip_existing: true
+  distributions: "sdist bdist_wheel"
