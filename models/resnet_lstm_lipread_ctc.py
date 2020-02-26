@@ -13,7 +13,7 @@ from keras.models import load_model
 from keras.layers.core import Lambda
 #from classification_models.keras import Classifiers as Separable_Classifiers
 from sep_classification_models.keras import Classifiers as Separable_Classifiers
-from lipnet.core.layers import CTC
+from core.layers import CTC
 from .mish import Mish
 
 def GRU(x, input_size, hidden_size, num_layers, num_classes, every_frame=True):
